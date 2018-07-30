@@ -2,6 +2,7 @@ require 'net/http'
 require 'twilio-ruby'
 require 'date'
 require 'time'
+require_relative 'TwilioAuth'
 
 
 class TellMe
@@ -10,14 +11,14 @@ class TellMe
 		@symbols = ["siri", "syf", "brk.b"]
 		@@symbols = []
 # Necessary class variable to track a percentage change -->
-	 	@@openprice = opentrack("siri")
+#	 	@@openprice = opentrack("siri")
 	end
 
 	def checktime
 		
 		loop do
 			current_time = Time.now.strftime("%H:%M")
-			first_start = "08:45"
+			first_start = "08:48"
 
 				if current_time >= first_start
 				pricelookup
@@ -36,7 +37,7 @@ track_fucntion_1 = <<-BOM
 BOM
 		loop do
 			current_time = Time.now.strftime("%H:%M")
-			second_start = "10:45"
+			second_start = "08:30"
 
 				if current_time >= second_start
 					pricelookup
@@ -97,7 +98,7 @@ track_function_3 = <<-BOM
 	def opentrack(opener)
 
 		@opener = opener
-		uri = URI('http://www.nasdaq.com/symbol/' + @opener.to_s + '/real-time')
+		uri = URI('https://www.nasdaq.com/symbol/' + @opener.to_s + '/real-time')
 				@quote = Net::HTTP.get(uri)
 			stock_price = @quote.scan(/\W\W\W\d+\.\d+/i)
 			number = stock_price[0]
@@ -109,13 +110,13 @@ track_function_3 = <<-BOM
 	def pricetracking(lookup)
 
 			@lookup = lookup
-			uri = URI('http://www.nasdaq.com/symbol/' + @lookup.to_s + '/real-time')
+			uri = URI('https://www.nasdaq.com/symbol/' + @lookup.to_s + '/real-time')
 				@quote = Net::HTTP.get(uri)
 			stock_price = @quote.scan(/\W\W\W\d+\.\d+/i)
 			number = stock_price[0]
 			final_quote = number.delete('"\">$')
 		#print prices to screen and begin messaging method
-			analytics(final_quote)
+		# analytics(final_quote)
 
 	end
 
@@ -123,7 +124,7 @@ track_function_3 = <<-BOM
 
 		@symbols.each do |stock|
 
-			uri = URI('http://www.nasdaq.com/symbol/' + stock.to_s + '/real-time')
+			uri = URI('https://www.nasdaq.com/symbol/' + stock.to_s + '/real-time')
 				@quote = Net::HTTP.get(uri)
 			stock_price = @quote.scan(/\W\W\W\d+\.\d+/i)
 			number = stock_price[0]
@@ -140,33 +141,37 @@ track_function_3 = <<-BOM
 		@final_quote = final_quote
 		message = "#{stock} is currently trading at #{@final_quote}"
 
-		account_sid = ENV["account_sid"] 
-		auth_token = ENV["auth_token"]
-			
+		account_sid = ENV["account_sid"] # Your Account sid from ENV variable held in 'TwilioAuthTokens.rb'
+		auth_token = ENV["auth_token"]   # Your Auth Token from ENV in 'TwilioAuthTokens.rb'
+
+
 		@client = Twilio::REST::Client.new account_sid, auth_token
-	
-		message = @client.account.messages.create(
-									:body =>  message,
-									:to => ENV["myNum"],
-									:from => ENV["twilioNum"])
-			puts message.sid
+		message = @client.messages.create(
+				body: message,
+				to: ENV["myNum"],    # Replace with your ENV variable holding your phone number
+				from: ENV["twilioNum"])  # Replace with your ENV variable holding Twilio account phone number
+
+		puts message.sid
 	end
 
-	def analytics(tracked_price_movements)
+# 	analytics_method = <<-DOM
+# # 	def analytics(tracked_price_movements)
+# #
+# # 		@@symbols << tracked_price_movements.to_f
+# #
+# # 		case @@symbols.length
+# # 		when 2
+# # 			@@symbols.map do |currentprice|
+# # 				puts "Calculating percentage increase/decrease between the opening price of:#{@@openprice} and #{currentprice}..."
+# # 				percent_increase = ( ( currentprice.to_f - @@openprice.to_f ) / @@openprice.to_f ) * 100
+# # 				puts "The current price increase at this time is #{percent_increase} percent."
+# # 			end
+# # 		else
+# # 			checktime
+# # 		end
+# # 	end
+# # DOM
 
-		@@symbols << tracked_price_movements.to_f
-
-		case @@symbols.length
-		when 2
-			@@symbols.map do |currentprice|
-				puts "Calculating percentage increase/decrease between the opening price of:#{@@openprice} and #{currentprice}..."
-				percent_increase = ( ( currentprice.to_f - @@openprice.to_f ) / @@openprice.to_f ) * 100
-				puts "The current price increase at this time is #{percent_increase} percent."
-			end
-		else
-			checktime
-		end
-	end
 end
 
 checker = TellMe.new
