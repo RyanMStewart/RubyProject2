@@ -18,7 +18,7 @@ class TellMe
 		
 		loop do
 			current_time = Time.now.strftime("%H:%M")
-			first_start = "08:48"
+			first_start = "10:00"
 
 				if current_time >= first_start
 				pricelookup
@@ -37,7 +37,7 @@ track_fucntion_1 = <<-BOM
 BOM
 		loop do
 			current_time = Time.now.strftime("%H:%M")
-			second_start = "08:30"
+			second_start = "11:00"
 
 				if current_time >= second_start
 					pricelookup
